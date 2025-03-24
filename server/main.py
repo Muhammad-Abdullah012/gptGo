@@ -48,7 +48,7 @@ async def generate_text(request: GenerateRequest):
         # response = client.models.generate_content(
         #     model="gemini-2.0-flash",
         #     contents=[
-        #         f"You need to choose which action to take to help a user do this task: {prompt}. "
+        #         f"You need to choose which action to take to help a user do this task: {request.prompt}. "
         #         "Your options are navigate, type, click, and done. Navigate should take you to the specified URL. "
         #         "Type and click take strings where if you want to click on an object, return the string with the yellow "
         #         "character sequence you want to click on, and to type just a string with the message you want to type. "
