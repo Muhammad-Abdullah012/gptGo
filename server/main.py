@@ -43,7 +43,7 @@ async def generate_text(request: GenerateRequest):
     """
     try:
         # Open the image using PIL
-        image =base64.b64decode(request.image)
+        image = base64.b64decode(request.image)
         # Generate content using the Gemini API
         # response = client.models.generate_content(
         #     model="gemini-2.0-flash",
