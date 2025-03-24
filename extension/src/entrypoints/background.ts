@@ -6,16 +6,14 @@ export default defineBackground(() => {
   }
 
   // Listen for messages from the popup
-  browser.runtime.onMessage.addListener(
-    async (message, sender, sendResponse) => {
-      if (message.action === "captureScreenshot") {
-        try {
-          const screenshot = await captureScreenshot();
-          sendResponse({ success: true, screenshot });
-        } catch (error) {
-          sendResponse({ success: false, error });
-        }
-      }
+  browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.action === "captureScreenshot") {
+      captureScreenshot()
+        .then((screenshot) => {
+          sendResponse({ screenshot });
+        })
+        .catch(console.error);
+      return true;
     }
-  );
+  });
 });
