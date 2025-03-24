@@ -8,8 +8,5 @@ export default defineConfig({
     permissions: ["activeTab"],
     action: {},
   },
-  runner: {
-    chromiumProfile: "/home/office/.config/google-chrome/Default"
-  },
   modules: ['@wxt-dev/module-svelte'],
 });
