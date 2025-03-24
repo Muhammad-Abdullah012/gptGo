@@ -1,30 +1,67 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount } from "svelte";
+  import { delay } from "@/lib/delay";
+  import { checkIfExtensionIsAllowed } from "@/lib/isExtensionAllowed";
 
   // State variables
-  let userInput = ''; // Stores the user's input
+  let userInput = ""; // Stores the user's input
   let isLoading = false; // Indicates if the API request is in progress
-  let message = ''; // Feedback message for the user
+  let message = ""; // Feedback message for the user
+  let isExtensionAllowed = false;
 
+  onMount(() => {
+    checkIfExtensionIsAllowed()
+      .then((allowed) => {
+        isExtensionAllowed = allowed;
+      })
+      .catch((error) => {
+        console.error("Error checking if extension is allowed:", error);
+      });
+  });
   // Function to handle form submission
   async function handleSubmit() {
     if (!userInput.trim()) {
-      message = 'Input cannot be empty.';
+      message = "Input cannot be empty.";
       return;
     }
 
     try {
       isLoading = true;
-      message = ''; // Clear previous messages
-      const screenshot = await browser.runtime.sendMessage({ action: 'captureScreenshot' });
+      message = ""; // Clear previous messages
+      const [tab] = await browser.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
+      await browser.tabs.sendMessage(tab.id ?? 0, { action: "PressKey" });
+      await delay();
+      const screenshot = await browser.runtime.sendMessage({
+        action: "captureScreenshot",
+      });
       console.log("screenshot => ", screenshot);
+
+      // Download the screenshot
+      if (screenshot?.screenshot) {
+        const base64Image = screenshot.screenshot;
+        const link = document.createElement("a");
+        link.href = base64Image;
+        link.download = "screenshot.png";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      } else {
+        throw new Error("Screenshot data is missing or invalid.");
+      }
+
       // Replace with your actual backend API endpoint
-      const response = await fetch('http://localhost:8000/generate', {
-        method: 'POST',
+      const response = await fetch("http://localhost:8000/generate", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ prompt: userInput, image: screenshot }),
+        body: JSON.stringify({
+          prompt: userInput,
+          image: screenshot?.screenshot,
+        }),
       });
 
       if (!response.ok) {
@@ -33,11 +70,11 @@
 
       const data = await response.json();
       console.log("data => ", JSON.stringify(data));
-      message = `Success: ${data.message || 'Data sent successfully!'}`;
-      userInput = ''; // Clear the input field
+      message = `Success: ${data.message || "Data sent successfully!"}`;
+      userInput = ""; // Clear the input field
     } catch (error) {
-      console.error('Error sending data:', error);
-      message = `Error: ${error.message || 'Failed to send data.'}`;
+      console.error("Error sending data:", error);
+      message = `Error: ${error.message || "Failed to send data."}`;
     } finally {
       isLoading = false;
     }
@@ -46,20 +83,24 @@
 
 <main>
   <div class="card">
-    <h2 class="card-title">Send Input to Backend</h2>
-    <form on:submit|preventDefault={handleSubmit}>
-      <input
-        type="text"
-        bind:value={userInput}
-        placeholder="Enter your input here"
-        class="input-field"
-      />
-      <button type="submit" disabled={isLoading} class="submit-button">
-        {isLoading ? 'Sending...' : 'Submit'}
-      </button>
-    </form>
-    {#if message}
-      <p class="message">{message}</p>
+    {#if !isExtensionAllowed}
+      <h2 class="card-title">gpt-go is not allowed to run in this page!</h2>
+    {:else}
+      <h2 class="card-title">Enter your task</h2>
+      <form on:submit|preventDefault={handleSubmit}>
+        <input
+          type="text"
+          bind:value={userInput}
+          placeholder="Enter your input here"
+          class="input-field"
+        />
+        <button type="submit" disabled={isLoading} class="submit-button">
+          {isLoading ? "Sending..." : "Submit"}
+        </button>
+      </form>
+      {#if message}
+        <p class="message">{message}</p>
+      {/if}
     {/if}
   </div>
 </main>
@@ -74,14 +115,16 @@
 
   /* Main Container */
   main {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     background-color: #f9f9f9;
     color: #333;
     padding: 1em;
     border-radius: 8px;
     max-width: 400px;
     margin: auto;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.06);
+    box-shadow:
+      0 4px 6px rgba(0, 0, 0, 0.1),
+      0 1px 3px rgba(0, 0, 0, 0.06);
   }
 
   /* Header */
