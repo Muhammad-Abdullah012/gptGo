@@ -1,10 +1,8 @@
 from pydantic import BaseModel, Field
 from typing import Literal, Optional
 from fastapi import FastAPI, Form, HTTPException, File, UploadFile
-from google.genai import Client
-from PIL import Image
+from google.genai import Client, types
 import base64
-import io
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -15,6 +13,7 @@ client = Client()
 
 class GenerateRequest(BaseModel):
     prompt: str
+    image: str
 
 
 class Action(BaseModel):
@@ -22,6 +21,7 @@ class Action(BaseModel):
     Represents the expected JSON response structure.
     Only one of the fields (`navigate`, `type`, `click`, `done`) should be present.
     """
+
     navigate: Optional[str] = Field(None, description="A URL to navigate to.")
     type: Optional[str] = Field(None, description="Text to type.")
     click: Optional[str] = Field(None, description="A 1-2 letter sequence to click.")
@@ -36,18 +36,14 @@ def read_root():
 
 
 @app.post("/generate/")
-async def generate_text(prompt: str = Form(...), image: UploadFile = File(...)):
+async def generate_text(request: GenerateRequest):
     """
     Endpoint to generate text based on the provided prompt and image.
     The image is uploaded as a file, and the prompt is passed as form data.
     """
     try:
-        # Read the uploaded image file
-        image_data = await image.read()
-
         # Open the image using PIL
-        image_pil = Image.open(io.BytesIO(image_data))
-
+        image =base64.b64decode(request.image)
         # Generate content using the Gemini API
         # response = client.models.generate_content(
         #     model="gemini-2.0-flash",
@@ -61,16 +57,15 @@ async def generate_text(prompt: str = Form(...), image: UploadFile = File(...)):
         #         "the box along with a type with the message to write. When the page seems satisfactory, return done as a key "
         #         "with no value. You must respond in JSON only with no other fluff or bad things will happen. The JSON keys "
         #         "must ONLY be one of navigate, type, or click. Do not return the JSON inside a code block.",
-        #         image_pil,
+        #         types.Part.from_bytes(data=image, mime_type="image/jpeg"),
         #     ],
         #     config={
         #         "response_mime_type": "application/json",
         #         "response_schema": Action,
         #     },
         # )
-        print("image received " + image.filename)
         # Return the generated response
-        return {"prompt": prompt, "generated_text": "gemini call is commented!"}
+        return {"prompt": request.prompt, "generated_text": "gemini call is commented!"}
 
     except Exception as e:
         # Handle any errors during text generation
