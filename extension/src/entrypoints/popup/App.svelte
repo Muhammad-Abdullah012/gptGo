@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { delay } from "@/lib/delay";
+  import { BROWSER_ACTIONS } from "@/constants/browserActions";
   import { checkIfExtensionIsAllowed } from "@/lib/isExtensionAllowed";
 
   // State variables
@@ -25,59 +25,30 @@
       return;
     }
 
-    try {
-      isLoading = true;
-      message = ""; // Clear previous messages
-      const [tab] = await browser.tabs.query({
-        active: true,
-        currentWindow: true,
-      });
-      await browser.tabs.sendMessage(tab.id ?? 0, { action: "PressKey" });
-      await delay();
-      const screenshot = await browser.runtime.sendMessage({
-        action: "captureScreenshot",
-      });
-      console.log("screenshot => ", screenshot);
-
-      // Download the screenshot
-      if (screenshot?.screenshot) {
-        const base64Image = screenshot.screenshot;
-        const link = document.createElement("a");
-        link.href = base64Image;
-        link.download = "screenshot.png";
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-      } else {
-        throw new Error("Screenshot data is missing or invalid.");
-      }
-
-      // Replace with your actual backend API endpoint
-      const response = await fetch("http://localhost:8000/generate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          prompt: userInput,
-          image: screenshot?.screenshot,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log("data => ", JSON.stringify(data));
-      message = `Success: ${data.message || "Data sent successfully!"}`;
-      userInput = ""; // Clear the input field
-    } catch (error) {
-      console.error("Error sending data:", error);
-      message = `Error: ${error.message || "Failed to send data."}`;
-    } finally {
+    isLoading = true;
+    message = ""; // Clear previous messages
+    console.log("isExtensionAllowed => ", isExtensionAllowed);
+    if (isExtensionAllowed) {
+      browser.runtime
+        .sendMessage({
+          action: BROWSER_ACTIONS.START_TASK,
+          payload: { prompt: userInput },
+        })
+        .then(() => {
+          message = "Task started successfully!";
+        })
+        .catch((error) => {
+          console.error("Error sending message to background script:", error);
+          message = "Error sending message to background script.";
+        })
+        .finally(() => {
+          isLoading = false;
+        });
+    } else {
+      message = "gpt-go is not allowed to run in this page!";
       isLoading = false;
     }
+    userInput = ""; // Clear the input field
   }
 </script>
 

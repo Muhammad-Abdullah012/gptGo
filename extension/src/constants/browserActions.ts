@@ -1,0 +1,4 @@
+export const BROWSER_ACTIONS = {
+    PRESS_KEY: 'PRESS_KEY',
+    START_TASK: 'START_TASK',
+};
