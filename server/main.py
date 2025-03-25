@@ -39,7 +39,7 @@ def read_root():
 async def generate_text(request: GenerateRequest):
     """
     Endpoint to generate text based on the provided prompt and image.
-    The image is uploaded as a file, and the prompt is passed as form data.
+    The image (base64 encoded) and prompt are both inside request body.
     """
     try:
         # Open the image using PIL
