@@ -19,7 +19,8 @@
       });
   });
   // Function to handle form submission
-  async function handleSubmit() {
+  async function handleSubmit(e: Event) {
+    e.preventDefault();
     if (!userInput.trim()) {
       message = "Input cannot be empty.";
       return;
@@ -34,9 +35,6 @@
           action: BROWSER_ACTIONS.START_TASK,
           payload: { prompt: userInput },
         })
-        .then(() => {
-          message = "Task started successfully!";
-        })
         .catch((error) => {
           console.error("Error sending message to background script:", error);
           message = "Error sending message to background script.";
@@ -48,7 +46,24 @@
       message = "gpt-go is not allowed to run in this page!";
       isLoading = false;
     }
-    userInput = ""; // Clear the input field
+    // const interval = setInterval(handleNextClick, 2000);
+
+    // userInput = ""; // Clear the input field
+  }
+  
+  async function handleNextClick() {
+    console.log("running next click");
+    browser.runtime
+      .sendMessage({
+        action: BROWSER_ACTIONS.NEXT,
+      })
+      .catch((error) => {
+        console.error("Error sending message to background script:", error);
+        message = "Error sending message to background script.";
+      })
+      .finally(() => {
+        isLoading = false;
+      });
   }
 </script>
 
@@ -58,7 +73,7 @@
       <h2 class="card-title">gpt-go is not allowed to run in this page!</h2>
     {:else}
       <h2 class="card-title">Enter your task</h2>
-      <form on:submit|preventDefault={handleSubmit}>
+      <form onsubmit={handleSubmit}>
         <input
           type="text"
           bind:value={userInput}
@@ -67,6 +82,9 @@
         />
         <button type="submit" disabled={isLoading} class="submit-button">
           {isLoading ? "Sending..." : "Submit"}
+        </button>
+        <button type="button" onclick={handleNextClick} class="submit-button">
+          Next
         </button>
       </form>
       {#if message}
@@ -172,6 +190,7 @@
     font-weight: 600;
     cursor: pointer;
     transition: background-color 0.3s ease;
+    margin-bottom: 10px;
   }
 
   .submit-button:hover:not(:disabled) {

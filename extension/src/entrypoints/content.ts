@@ -2,7 +2,7 @@ import { BROWSER_ACTIONS } from "@/constants/browserActions";
 import { pressKey } from "@/lib/pressKeyboardKeys";
 
 export default defineContentScript({
-  matches: ["*://*.google.com/*"],
+  matches: ["<all_urls>"],
   main(ctx) {
     console.log("Hello content.");
 
@@ -13,8 +13,6 @@ export default defineContentScript({
       }
     });
 
-    // window.addEventListener("keydown", (event) => {
-    //   console.log("Keydown event detected:", event);
-    // });
+    console.log("Adding keydown event listener.");
   },
 });

@@ -4,6 +4,9 @@ import PIL.Image
 from dotenv import load_dotenv
 from prompt import PROMPT
 from models import GenerateRequest, Action
+# from save_img import save_base64_image
+# from datetime import datetime
+import json
 
 load_dotenv()
 
@@ -26,7 +29,14 @@ async def generate_text(request: GenerateRequest):
         print("request => ", request.prompt)
         pil_image = PIL.Image.open("./images/vimium-controls.png")
         # # Generate content using the Gemini API
-        # save_base64_image(request.image, "./images/webpage.png")
+        # save_base64_image(
+        #     request.image,
+        #     f"./images/webpage_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.png",
+        # )
+        formatted_prompt = PROMPT.format(
+            prompt=request.prompt,
+            previous_actions=json.dumps(request.previous_actions, indent=2)
+        )
         response = client.models.generate_content(
             model="gemini-2.0-flash",
             contents=[
@@ -34,11 +44,7 @@ async def generate_text(request: GenerateRequest):
                     data=request.image.split(",")[1], mime_type="image/jpeg"
                 ),
                 pil_image,
-                (
-                    f"You are helping a user perform the following task: {request.prompt}. "
-                    "Refer to the instructions below for guidance."
-                ),
-                PROMPT,
+                types.Part.from_text(text=formatted_prompt),
             ],
             config={
                 "response_mime_type": "application/json",
