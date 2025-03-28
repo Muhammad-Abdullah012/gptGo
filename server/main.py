@@ -3,6 +3,7 @@ from google.genai import Client, types
 import PIL.Image
 from dotenv import load_dotenv
 from prompt import PROMPT
+from models import GenerateRequest
 
 load_dotenv()
 
