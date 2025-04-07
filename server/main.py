@@ -2,10 +2,11 @@ from fastapi import FastAPI, HTTPException
 from google.genai import Client, types
 import PIL.Image
 from dotenv import load_dotenv
-from prompt import PROMPT
+from prompt import PROMPT, SYSTEM_PROMPT
 from models import GenerateRequest, Action
-# from save_img import save_base64_image
-# from datetime import datetime
+
+from save_img import save_base64_image, img_to_base64
+from datetime import datetime
 import json
 
 load_dotenv()
@@ -27,30 +28,49 @@ async def generate_text(request: GenerateRequest):
     """
     try:
         print("request => ", request.prompt)
-        pil_image = PIL.Image.open("./images/vimium-controls.png")
         # # Generate content using the Gemini API
-        # save_base64_image(
-        #     request.image,
-        #     f"./images/webpage_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.png",
-        # )
+        save_base64_image(
+            request.image,
+            f"./images/webpage_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.png",
+        )
         formatted_prompt = PROMPT.format(
             prompt=request.prompt,
-            previous_actions=json.dumps(request.previous_actions, indent=2)
+            previous_actions=json.dumps(request.previous_actions, indent=2),
         )
         response = client.models.generate_content(
-            model="gemini-2.0-flash",
+            model="gemini-2.0-flash-001",
             contents=[
-                types.Part.from_bytes(
-                    data=request.image.split(",")[1], mime_type="image/jpeg"
+                types.Content(
+                    role="user",
+                    parts=[
+                        types.Part.from_text(text="This is browser screenshot: "),
+                        types.Part.from_bytes(
+                            data=request.image.split(",")[1], mime_type="image/jpeg"
+                        ),
+                        types.Part.from_text(text=formatted_prompt),
+                        types.Part.from_text(text="These are extra vimium controls: "),
+                        types.Part.from_bytes(
+                            data=img_to_base64("./images/vimium-controls.png"),
+                            mime_type="image/png",
+                        ),
+                        types.Part.from_text(
+                            text="This is how like icon looks like in instagram: "
+                        ),
+                        types.Part.from_bytes(
+                            data=img_to_base64("./images/like.png"),
+                            mime_type="image/png",
+                        ),
+                    ],
                 ),
-                pil_image,
-                types.Part.from_text(text=formatted_prompt),
             ],
-            config={
-                "response_mime_type": "application/json",
-                "response_schema": Action,
-                "temperature": 0,
-            },
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                response_schema=Action,
+                temperature=0,
+                system_instruction=[
+                    types.Part.from_text(text=SYSTEM_PROMPT),
+                ],
+            ),
         )
         # Return the generated response
         return {"prompt": request.prompt, "generated_text": response.parsed}
