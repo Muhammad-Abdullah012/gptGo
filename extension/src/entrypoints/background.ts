@@ -30,10 +30,10 @@ export default defineBackground(() => {
     }
     if (action.type) {
       // Focus input field before typing
-      await sendMessageToActiveTab({
-        action: BROWSER_ACTIONS.PRESS_KEY,
-        payload: { key: "Escape" }, // Exit any vimium modes
-      });
+      // await sendMessageToActiveTab({
+      //   action: BROWSER_ACTIONS.PRESS_KEY,
+      //   payload: { key: "Escape" }, // Exit any vimium modes
+      // });
       await delay(200);
 
       for (const key of action.type.split("")) {
@@ -69,12 +69,16 @@ export default defineBackground(() => {
       await delay(1000); // Wait for vimium controls to appear
 
       // Scroll to top to ensure vimium controls are visible
-      await sendMessageToActiveTab({
-        action: BROWSER_ACTIONS.PRESS_KEY,
-        payload: { key: "gg" },
-      });
+      // await sendMessageToActiveTab({
+      //   action: BROWSER_ACTIONS.PRESS_KEY,
+      //   payload: { key: "g" },
+      // });
+      // await sendMessageToActiveTab({
+      //   action: BROWSER_ACTIONS.PRESS_KEY,
+      //   payload: { key: "g" },
+      // });
 
-      await delay(500);
+      // await delay(500);
       const screenshot = await captureScreenshot();
 
       // Add retry logic for API calls
