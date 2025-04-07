@@ -5,6 +5,7 @@ export const BROWSER_ACTIONS = {
 };
 
 export const KEY_TO_CODE: { [key: string]: string } = {
+  Escape: "Escape",
   Enter: "Enter",
   Tab: "Tab",
   ArrowUp: "ArrowUp",
