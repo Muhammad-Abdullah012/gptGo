@@ -1,4 +1,4 @@
-import { BROWSER_ACTIONS } from "@/constants/browserActions";
+import { BROWSER_ACTIONS, KEY_TO_CODE } from "@/constants/browserActions";
 import { IAction } from "@/interfaces";
 import { delay } from "@/lib/delay";
 import { pressKey } from "@/lib/pressKeyboardKeys";
@@ -20,10 +20,10 @@ export default defineBackground(() => {
       await browser.tabs.update({ url: action.navigate });
     }
     if (action.click) {
-      if (action.click.toLowerCase() === "escape") {
+      if (KEY_TO_CODE[action.click]) {
         await sendMessageToActiveTab({
           action: BROWSER_ACTIONS.PRESS_KEY,
-          payload: { key: "Escape" },
+          payload: { key: KEY_TO_CODE[action.click] },
         });
       } else {
         for (const key of action.click.split("")) {
