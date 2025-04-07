@@ -76,10 +76,10 @@ export default defineBackground(() => {
       await delay(1000); // Wait for vimium controls to appear
 
       // Scroll to top to ensure vimium controls are visible
-      // await sendMessageToActiveTab({
-      //   action: BROWSER_ACTIONS.PRESS_KEY,
-      //   payload: { key: "g" },
-      // });
+      await sendMessageToActiveTab({
+        action: BROWSER_ACTIONS.PRESS_KEY,
+        payload: { key: "Escape" },
+      });
       await sendMessageToActiveTab({
         action: BROWSER_ACTIONS.PRESS_KEY,
         payload: { key: "f" },
