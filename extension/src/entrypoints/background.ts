@@ -20,12 +20,19 @@ export default defineBackground(() => {
       await browser.tabs.update({ url: action.navigate });
     }
     if (action.click) {
-      for (const key of action.click.split("")) {
+      if (action.click.toLowerCase() === "escape") {
         await sendMessageToActiveTab({
           action: BROWSER_ACTIONS.PRESS_KEY,
-          payload: { key },
+          payload: { key: "Escape" },
         });
-        await delay(100);
+      } else {
+        for (const key of action.click.split("")) {
+          await sendMessageToActiveTab({
+            action: BROWSER_ACTIONS.PRESS_KEY,
+            payload: { key },
+          });
+          await delay(100);
+        }
       }
     }
     if (action.type) {
@@ -73,12 +80,12 @@ export default defineBackground(() => {
       //   action: BROWSER_ACTIONS.PRESS_KEY,
       //   payload: { key: "g" },
       // });
-      // await sendMessageToActiveTab({
-      //   action: BROWSER_ACTIONS.PRESS_KEY,
-      //   payload: { key: "g" },
-      // });
+      await sendMessageToActiveTab({
+        action: BROWSER_ACTIONS.PRESS_KEY,
+        payload: { key: "f" },
+      });
 
-      // await delay(500);
+      await delay(500);
       const screenshot = await captureScreenshot();
 
       // Add retry logic for API calls
@@ -134,6 +141,7 @@ export default defineBackground(() => {
       active: true,
       currentWindow: true,
     });
+    console.log('active tab => ', tab.id);
     await browser.tabs.sendMessage(tab.id ?? 0, payload);
   }
   // Listen for messages from the popup
