@@ -1,6 +1,5 @@
 from fastapi import FastAPI, HTTPException
 from google.genai import Client, types
-import PIL.Image
 from dotenv import load_dotenv
 from prompt import PROMPT, SYSTEM_PROMPT
 from models import GenerateRequest, Action
@@ -17,7 +16,7 @@ client = Client()
 
 @app.get("/")
 def read_root():
-    return {"Hello": "World"}
+    return {"Status": "OK"}
 
 
 @app.post("/generate/")
@@ -72,10 +71,10 @@ async def generate_text(request: GenerateRequest):
                 ],
             ),
         )
-        # Return the generated response
+
         return {"prompt": request.prompt, "generated_text": response.parsed}
 
     except Exception as e:
         print("Error generating text: ", str(e))
         # Handle any errors during text generation
-        raise HTTPException(status_code=500, detail=f"Error generating text: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error generating text: {str(e)}") from e
