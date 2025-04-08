@@ -42,7 +42,7 @@ async def generate_text(request: GenerateRequest):
                 types.Content(
                     role="user",
                     parts=[
-                        types.Part.from_text(text="This is browser screenshot: "),
+                        types.Part.from_text(text="This is browser screenshot with activated link hints: "),
                         types.Part.from_bytes(
                             data=request.image.split(",")[1], mime_type="image/jpeg"
                         ),
