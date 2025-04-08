@@ -3,6 +3,7 @@ import { pressKey } from "@/lib/pressKeyboardKeys";
 
 export default defineContentScript({
   matches: ["<all_urls>"],
+  registration: "manifest",
   main(ctx) {
     console.log("Hello content.");
 
@@ -12,7 +13,5 @@ export default defineContentScript({
         pressKey(message.payload.key);
       }
     });
-
-    console.log("Adding keydown event listener.");
   },
 });

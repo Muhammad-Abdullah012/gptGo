@@ -20,6 +20,7 @@ export default defineBackground(() => {
       await browser.tabs.update({ url: action.navigate });
     }
     if (action.click) {
+      console.log("key to code => ", KEY_TO_CODE[action.click]);
       if (KEY_TO_CODE[action.click]) {
         await sendMessageToActiveTab({
           action: BROWSER_ACTIONS.PRESS_KEY,
