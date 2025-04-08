@@ -69,11 +69,70 @@ export default defineBackground(() => {
       await browser.tabs.update(tab.id, { active: true });
     }
   }
+
+  async function waitForActiveTabToLoad(timeoutMs: number = 10000): Promise<void> {
+    const [tab] = await browser.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
+
+    if (!tab) {
+      throw new Error("No active tab found");
+    }
+
+    if (tab.status === "complete") {
+      return;
+    }
+
+    // Create a promise that resolves when the tab finishes loading
+    const loadingPromise = new Promise<void>((resolve, reject) => {
+      const listener = (tabId: number, changeInfo: any) => {
+        if (tabId === tab.id && changeInfo.status === "complete") {
+          cleanup();
+          resolve();
+        }
+      };
+
+      const errorListener = (closedTabId: number) => {
+        if (closedTabId === tab.id) {
+          cleanup();
+          reject(new Error("Tab closed before loading completed"));
+        }
+      };
+
+      const cleanup = () => {
+        browser.tabs.onUpdated.removeListener(listener);
+        browser.tabs.onRemoved.removeListener(errorListener);
+      };
+
+      // Add listeners
+      browser.tabs.onUpdated.addListener(listener);
+      browser.tabs.onRemoved.addListener(errorListener);
+
+      browser.tabs.get(tab.id!)
+        .then((currentTab) => {
+          if (currentTab.status === "complete") {
+            cleanup();
+            resolve();
+          }
+        })
+        .catch(() => { /* Tab was closed, handled by errorListener */ });
+    });
+
+    // Add a timeout mechanism
+    const timeoutPromise = new Promise<void>((_, reject) => {
+      setTimeout(() => {
+        reject(new Error(`Timeout: Tab did not complete loading within ${timeoutMs}ms`));
+      }, timeoutMs);
+    });
+
+    await Promise.race([loadingPromise, timeoutPromise]);
+  }
   // background.ts (Update startTask)
   async function startTask() {
     try {
       await focusActiveTab();
-
+      await waitForActiveTabToLoad();
       // Scroll to top to ensure vimium controls are visible
       await sendMessageToActiveTab({
         action: BROWSER_ACTIONS.PRESS_KEY,
@@ -125,8 +184,7 @@ export default defineBackground(() => {
       ].slice(-5); // Keep last 5 actions
 
       if (!taskCompleted) {
-        // Wait for page stability
-        await delay(3000);
+        await waitForActiveTabToLoad();
         await startTask();
       }
     } catch (error) {
@@ -140,8 +198,21 @@ export default defineBackground(() => {
       active: true,
       currentWindow: true,
     });
-    console.log('active tab => ', tab.id);
-    await browser.tabs.sendMessage(tab.id ?? 0, payload);
+
+    if (!tab?.id) {
+      throw new Error('No active tab found');
+    }
+
+    console.log("tab => ", tab.id, ", tab status => ", tab.status);
+    if (tab.status !== "complete") {
+      await waitForActiveTabToLoad();
+    }
+    try {
+      await browser.tabs.sendMessage(tab.id, payload);
+    } catch (error) {
+      console.error('Failed to send message to tab:', error);
+      throw new Error('Message sending failed - content script might not be loaded');
+    }
   }
   // Listen for messages from the popup
   browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
