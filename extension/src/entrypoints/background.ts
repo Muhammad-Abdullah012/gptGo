@@ -13,9 +13,6 @@ export default defineBackground(() => {
 
   async function performAction(action: IAction) {
     console.log("action => ", JSON.stringify(action));
-    if (action.done) {
-      return true;
-    }
     if (action.navigate) {
       await browser.tabs.update({ url: action.navigate });
     }
@@ -32,7 +29,6 @@ export default defineBackground(() => {
             action: BROWSER_ACTIONS.PRESS_KEY,
             payload: { key },
           });
-          await delay(100);
         }
       }
     }
@@ -132,6 +128,7 @@ export default defineBackground(() => {
   // background.ts (Update startTask)
   async function startTask() {
     try {
+      console.log("******* startTask function called *******");
       await focusActiveTab();
       await waitForActiveTabToLoad();
       // Scroll to top to ensure vimium controls are visible
@@ -186,6 +183,7 @@ export default defineBackground(() => {
 
       if (!taskCompleted) {
         await waitForActiveTabToLoad();
+        await delay(1000);
         await startTask();
       }
     } catch (error) {
@@ -204,11 +202,13 @@ export default defineBackground(() => {
       throw new Error('No active tab found');
     }
 
-    console.log("tab => ", tab.id, ", tab status => ", tab.status);
+    console.log("tab => ", tab.id, ", tab status => ", tab.status, ", payload => ", JSON.stringify(payload));
     if (tab.status !== "complete") {
       await waitForActiveTabToLoad();
+      console.log("tab status changed to complete");
     }
     try {
+      await delay(1000);
       await browser.tabs.sendMessage(tab.id, payload);
     } catch (error) {
       console.error('Failed to send message to tab:', error);
