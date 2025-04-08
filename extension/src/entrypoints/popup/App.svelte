@@ -42,6 +42,7 @@
         .finally(() => {
           isLoading = false;
         });
+      window.close();
     } else {
       message = "gpt-go is not allowed to run in this page!";
       isLoading = false;

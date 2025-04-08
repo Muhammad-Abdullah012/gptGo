@@ -73,7 +73,6 @@ export default defineBackground(() => {
   async function startTask() {
     try {
       await focusActiveTab();
-      await delay(1000); // Wait for vimium controls to appear
 
       // Scroll to top to ensure vimium controls are visible
       await sendMessageToActiveTab({
@@ -85,7 +84,7 @@ export default defineBackground(() => {
         payload: { key: "f" },
       });
 
-      await delay(500);
+      await delay(1000); // Wait for vimium controls to appear
       const screenshot = await captureScreenshot();
 
       // Add retry logic for API calls
