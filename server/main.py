@@ -1,17 +1,22 @@
 from fastapi import FastAPI, HTTPException
-from google.genai import Client, types
+from openai import OpenAI
 from dotenv import load_dotenv
 from prompt import PROMPT, SYSTEM_PROMPT
-from models import GenerateRequest, Action
+from models import GenerateRequest
 
 from save_img import save_base64_image, img_to_base64
 from datetime import datetime
+from os import getenv
 import json
+import re
 
 load_dotenv()
 
 app = FastAPI()
-client = Client()
+client = OpenAI(
+    base_url="https://openrouter.ai/api/v1",
+    api_key=getenv("OPENROUTER_API_KEY"),
+)
 
 
 @app.get("/")
@@ -36,45 +41,58 @@ async def generate_text(request: GenerateRequest):
             prompt=request.prompt,
             previous_actions=json.dumps(request.previous_actions, indent=2),
         )
-        response = client.models.generate_content(
-            model="gemini-2.0-flash-001",
-            contents=[
-                types.Content(
-                    role="user",
-                    parts=[
-                        types.Part.from_text(text="This is browser screenshot with activated link hints: "),
-                        types.Part.from_bytes(
-                            data=request.image.split(",")[1], mime_type="image/jpeg"
-                        ),
-                        types.Part.from_text(text=formatted_prompt),
-                        types.Part.from_text(text="These are extra vimium controls: "),
-                        types.Part.from_bytes(
-                            data=img_to_base64("./images/vimium-controls.png"),
-                            mime_type="image/png",
-                        ),
-                        types.Part.from_text(
-                            text="This is how like icon looks like in instagram: "
-                        ),
-                        types.Part.from_bytes(
-                            data=img_to_base64("./images/like.png"),
-                            mime_type="image/png",
-                        ),
+        completion = client.chat.completions.create(
+            model="google/gemini-pro-1.5",
+            messages=[
+                {
+                    "role": "system",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": SYSTEM_PROMPT,
+                        },
                     ],
-                ),
+                },
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": formatted_prompt},
+                        {"type": "image_url", "image_url": {"url": request.image}},
+                    ],
+                },
             ],
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                response_schema=Action,
-                temperature=0,
-                system_instruction=[
-                    types.Part.from_text(text=SYSTEM_PROMPT),
-                ],
-            ),
+            response_format="json",
         )
+        raw_content = completion.choices[0].message.content
+        print("response => ", completion)
+        print("**********************************************")
+        print("generated text => " + raw_content)
+        match = re.search(r"```json\n(.*?)\n```", raw_content, re.DOTALL)
+        if not match:
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to parse response: No JSON content found",
+            )
 
-        return {"prompt": request.prompt, "generated_text": response.parsed}
+        json_str = match.group(1)
+        try:
+            parsed_data = json.loads(json_str)
+        except json.JSONDecodeError as e:
+            raise HTTPException(
+                status_code=500, detail=f"Failed to decode JSON: {str(e)}"
+            ) from e
+
+        print("Parsed data =>", parsed_data)
+
+        return {
+            "prompt": request.prompt,
+            "generated_text": parsed_data,
+            "raw_response": raw_content,
+        }
 
     except Exception as e:
         print("Error generating text: ", str(e))
         # Handle any errors during text generation
-        raise HTTPException(status_code=500, detail=f"Error generating text: {str(e)}") from e
+        raise HTTPException(
+            status_code=500, detail=f"Error generating text: {str(e)}"
+        ) from e
