@@ -30,7 +30,7 @@
     message = ""; // Clear previous messages
     console.log("isExtensionAllowed => ", isExtensionAllowed);
     if (!isExtensionAllowed) {
-      browser.tabs.update({ url: "https://www.google.com" });
+      browser.tabs.update({ url: "https://www.instagram.com" });
       isExtensionAllowed = true;
     }
 
