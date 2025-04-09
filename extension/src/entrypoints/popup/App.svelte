@@ -29,6 +29,11 @@
     isLoading = true;
     message = ""; // Clear previous messages
     console.log("isExtensionAllowed => ", isExtensionAllowed);
+    if (!isExtensionAllowed) {
+      browser.tabs.update({ url: "https://www.google.com" });
+      isExtensionAllowed = true;
+    }
+
     if (isExtensionAllowed) {
       browser.runtime
         .sendMessage({
@@ -43,15 +48,12 @@
           isLoading = false;
         });
       window.close();
-    } else {
-      message = "gpt-go is not allowed to run in this page!";
-      isLoading = false;
     }
     // const interval = setInterval(handleNextClick, 2000);
 
     // userInput = ""; // Clear the input field
   }
-  
+
   async function handleNextClick() {
     console.log("running next click");
     browser.runtime
@@ -70,27 +72,23 @@
 
 <main>
   <div class="card">
-    {#if !isExtensionAllowed}
-      <h2 class="card-title">gpt-go is not allowed to run in this page!</h2>
-    {:else}
-      <h2 class="card-title">Enter your task</h2>
-      <form onsubmit={handleSubmit}>
-        <input
-          type="text"
-          bind:value={userInput}
-          placeholder="Enter your input here"
-          class="input-field"
-        />
-        <button type="submit" disabled={isLoading} class="submit-button">
-          {isLoading ? "Sending..." : "Submit"}
-        </button>
-        <button type="button" onclick={handleNextClick} class="submit-button">
-          Next
-        </button>
-      </form>
-      {#if message}
-        <p class="message">{message}</p>
-      {/if}
+    <h2 class="card-title">Enter your task</h2>
+    <form onsubmit={handleSubmit}>
+      <input
+        type="text"
+        bind:value={userInput}
+        placeholder="Enter your input here"
+        class="input-field"
+      />
+      <button type="submit" disabled={isLoading} class="submit-button">
+        {isLoading ? "Sending..." : "Submit"}
+      </button>
+      <button type="button" onclick={handleNextClick} class="submit-button">
+        Next
+      </button>
+    </form>
+    {#if message}
+      <p class="message">{message}</p>
     {/if}
   </div>
 </main>
