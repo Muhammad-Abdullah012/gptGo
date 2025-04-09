@@ -107,6 +107,20 @@ export const performAction = async (action: IAction) => {
     if (action.navigate) {
         await browser.tabs.update({ url: action.navigate });
     }
+    if (action.scroll) {
+        await sendMessageToActiveTab({
+            action: BROWSER_ACTIONS.PRESS_KEY,
+            payload: { key: "Escape" },
+        });
+        // Manually scroll down
+        for (let i = 0; i < 4; i++) {
+            await sendMessageToActiveTab({
+                action: BROWSER_ACTIONS.PRESS_KEY,
+                payload: { key: "j" },
+            });
+            await delay(50);
+        }
+    }
     if (action.click) {
         console.log("key to code => ", KEY_TO_CODE[action.click]);
         if (KEY_TO_CODE[action.click]) {

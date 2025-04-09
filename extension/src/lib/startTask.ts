@@ -43,6 +43,7 @@ export const startTask = async () => {
             } catch (error) {
                 if (retries++ < MAX_RETRIES) {
                     await delay(2000 * retries);
+                    console.log("Retrying fetch...");
                     return fetchWithRetry();
                 }
                 throw error;
