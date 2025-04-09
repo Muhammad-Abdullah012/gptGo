@@ -1,8 +1,29 @@
 import { KEY_TO_CODE } from "@/constants/browserActions";
 import { delay } from "./delay";
 
-// content.ts (Update pressKey function)
-export const pressKey = async (key: string) => {
+export const setInputValue = async (value: string) => {
+  const activeElement = document.activeElement;
+  if (
+    activeElement instanceof HTMLInputElement ||
+    activeElement instanceof HTMLTextAreaElement
+  ) {
+    activeElement.value = value;
+    activeElement.dispatchEvent(new Event("input", { bubbles: true }));
+    const enterEvent = new KeyboardEvent('keydown', {
+      key: 'Enter',
+      code: 'Enter',
+      keyCode: 13,
+      which: 13,
+      bubbles: true,
+      cancelable: true
+    });
+    activeElement.dispatchEvent(enterEvent);
+  } else {
+    console.error("No active input or textarea element to set value");
+  }
+};
+
+export const simulateKeyPress = async (key: string) => {
   // Ensure document has focus
   if (!document.hasFocus()) {
     window.focus();
@@ -27,6 +48,6 @@ export const pressKey = async (key: string) => {
 
   // Dispatch events with short delay between them
   document.dispatchEvent(keyDownEvent);
-  await new Promise((resolve) => setTimeout(resolve, 50));
+  await delay(50);
   document.dispatchEvent(keyUpEvent);
 };

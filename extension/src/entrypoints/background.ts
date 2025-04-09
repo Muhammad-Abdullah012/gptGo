@@ -1,7 +1,6 @@
 import { BROWSER_ACTIONS, KEY_TO_CODE } from "@/constants/browserActions";
 import { IAction } from "@/interfaces";
 import { delay } from "@/lib/delay";
-import { pressKey } from "@/lib/pressKeyboardKeys";
 import { state } from "@/store/store.svelte";
 
 export default defineBackground(() => {
@@ -34,23 +33,9 @@ export default defineBackground(() => {
     }
     if (action.type) {
       // Focus input field before typing
-      // await sendMessageToActiveTab({
-      //   action: BROWSER_ACTIONS.PRESS_KEY,
-      //   payload: { key: "Escape" }, // Exit any vimium modes
-      // });
-      await delay(200);
-
-      for (const key of action.type.split("")) {
-        await sendMessageToActiveTab({
-          action: BROWSER_ACTIONS.PRESS_KEY,
-          payload: { key },
-        });
-        await delay(50);
-      }
-
       await sendMessageToActiveTab({
-        action: BROWSER_ACTIONS.PRESS_KEY,
-        payload: { key: "Enter" },
+        action: BROWSER_ACTIONS.TYPE,
+        payload: { text: action.type },
       });
     }
     return action.done || false;
