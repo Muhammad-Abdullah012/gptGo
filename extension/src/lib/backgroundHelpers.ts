@@ -105,7 +105,7 @@ export const sendMessageToActiveTab = async (payload: object) => {
 export const performAction = async (action: IAction) => {
     console.log("action => ", JSON.stringify(action));
     if (action.navigate) {
-        await browser.tabs.update({ url: action.navigate });
+        window.location.href = action.navigate;
     }
     if (action.scroll) {
         await sendMessageToActiveTab({
@@ -119,6 +119,22 @@ export const performAction = async (action: IAction) => {
                 payload: { key: "j" },
             });
             await delay(50);
+        }
+    }
+    if (action.key) {
+        console.log("key to code => ", KEY_TO_CODE[action.key]);
+        if (KEY_TO_CODE[action.key]) {
+            await sendMessageToActiveTab({
+                action: BROWSER_ACTIONS.PRESS_KEY,
+                payload: { key: KEY_TO_CODE[action.key] },
+            });
+        } else {
+            for (const key of action.key.split("")) {
+                await sendMessageToActiveTab({
+                    action: BROWSER_ACTIONS.PRESS_KEY,
+                    payload: { key },
+                });
+            }
         }
     }
     if (action.click) {

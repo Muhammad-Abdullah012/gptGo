@@ -19,6 +19,8 @@ export const setInputValue = async (value: string) => {
     });
     activeElement.dispatchEvent(enterEvent);
   } else {
+    activeElement?.appendChild(
+      document.createTextNode(value));
     console.error("No active input or textarea element to set value");
   }
 };
