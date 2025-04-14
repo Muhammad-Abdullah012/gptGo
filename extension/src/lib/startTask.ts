@@ -1,4 +1,4 @@
-import { captureScreenshot, focusActiveTab, performAction, sendMessageToActiveTab, waitForActiveTabToLoad } from "@/lib/backgroundHelpers";
+import { captureScreenshot, focusActiveTab, getCurrentTabHtml, getCurrentTabUrl, performAction, sendMessageToActiveTab, waitForActiveTabToLoad } from "@/lib/backgroundHelpers";
 import { BROWSER_ACTIONS } from "@/constants/browserActions";
 import { state } from "@/store/store.svelte";
 import { delay } from "@/lib/delay";
@@ -27,12 +27,26 @@ export const startTask = async () => {
 
         const fetchWithRetry = async () => {
             try {
+                const currentUrl = await getCurrentTabUrl();
+                const currentPageHtml = await getCurrentTabHtml();
+
+                console.log("request body  => ", JSON.stringify({
+                    prompt: state.prompt,
+                    // image: screenshot,
+                    current_url: currentUrl,
+                    current_page_html: currentPageHtml.html,
+                    previous_actions: state.previousActions.slice(-3), // Track action history
+                }));
+                
+
                 const response = await fetch("http://localhost:8000/generate", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         prompt: state.prompt,
                         image: screenshot,
+                        currentUrl,
+                        currentPageHtml: currentPageHtml.html,
                         previousActions: state.previousActions.slice(-3), // Track action history
                     }),
                 });

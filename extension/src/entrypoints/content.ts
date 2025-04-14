@@ -15,6 +15,9 @@ export default defineContentScript({
       if (message.action === BROWSER_ACTIONS.TYPE) {
         setInputValue(message.payload.text);
       }
+      if (message.action = BROWSER_ACTIONS.GET_HTML) {
+        sendResponse({ html: document.documentElement.outerHTML })
+      }
     });
   },
 });

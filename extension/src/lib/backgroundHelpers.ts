@@ -6,22 +6,32 @@ export const captureScreenshot = async (): Promise<string> => {
     return browser.tabs.captureVisibleTab();
 }
 
+export const getCurrentTab = () => browser.tabs.query({
+    active: true,
+    currentWindow: true,
+});
+
 export const focusActiveTab = async () => {
-    const [tab] = await browser.tabs.query({
-        active: true,
-        currentWindow: true,
-    });
+    const [tab] = await getCurrentTab()
     if (tab.id && tab.windowId) {
         await browser.windows.update(tab.windowId, { focused: true });
         await browser.tabs.update(tab.id, { active: true });
     }
 }
 
+export const getCurrentTabHtml = async () => {
+    const [tab] = await getCurrentTab();
+    if (!tab.id) return null;
+    return browser.tabs.sendMessage(tab.id, { action: BROWSER_ACTIONS.GET_HTML })
+}
+
+export const getCurrentTabUrl = async () => {
+    const [tab] = await getCurrentTab()
+    return tab.url;
+}
+
 export const waitForActiveTabToLoad = async (timeoutMs: number = 10000): Promise<void> => {
-    const [tab] = await browser.tabs.query({
-        active: true,
-        currentWindow: true,
-    });
+    const [tab] = await getCurrentTab()
 
     if (!tab) {
         throw new Error("No active tab found");
@@ -77,10 +87,7 @@ export const waitForActiveTabToLoad = async (timeoutMs: number = 10000): Promise
 }
 
 export const sendMessageToActiveTab = async (payload: object) => {
-    const [tab] = await browser.tabs.query({
-        active: true,
-        currentWindow: true,
-    });
+    const [tab] = await getCurrentTab()
 
     if (!tab?.id) {
         throw new Error('No active tab found');
