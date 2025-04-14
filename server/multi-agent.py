@@ -37,7 +37,6 @@ async def generate_text(request: GenerateRequest):
         navigation_response = navigator.decide_navigation(
             user_query=request.prompt,
             current_url=request.current_url,
-            screenshot=extract_base64_from_data_uri(request.image)
         )
 
         return {

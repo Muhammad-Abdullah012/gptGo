@@ -33,11 +33,10 @@ class Navigator:
             "Return JSON only. Do not include explanations, comments, or formatting outside the JSON object."
         )
 
-    def decide_navigation(self, user_query: str, current_url: str, screenshot: str):
+    def decide_navigation(self, user_query: str, current_url: str):
         response = self.client.models.generate_content(
             model="gemini-2.0-flash",
             contents=[
-                types.Part.from_bytes(data=screenshot, mime_type="image/png"),
                 types.Part.from_text(text=user_query),
                 types.Part.from_text(text=f"Current URL: {current_url}"),
             ],
