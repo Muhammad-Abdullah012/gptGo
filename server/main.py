@@ -1,8 +1,9 @@
 from fastapi import FastAPI, HTTPException
 from openai import OpenAI
 from dotenv import load_dotenv
-from prompt import PROMPT, SYSTEM_PROMPT
+from prompt import PROMPT, SYSTEM_PROMPT, SYSTEM_PROMPT_FOR_PLANNER_AGENT
 from models import GenerateRequest
+from google.genai import Client, types
 import google.generativeai as genai
 from save_img import save_base64_image, img_to_base64
 from datetime import datetime
@@ -19,7 +20,7 @@ client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
     api_key=getenv("OPENROUTER_API_KEY"),
 )
-
+genai_client = Client(api_key=getenv("GOOGLE_API_KEY"))
 genai.configure(api_key=getenv("GOOGLE_API_KEY"))
 model = genai.GenerativeModel(model_name="gemini-1.5-pro")
 
@@ -183,3 +184,32 @@ async def generate_text(request: GenerateRequest):
         raise HTTPException(
             status_code=500, detail=f"Error generating text: {str(e)}"
         ) from e
+
+
+@app.post("/plan_steps")
+async def plan_steps(request: GenerateRequest):
+    """
+    Endpoint to plan steps based on the provided prompt and image.
+    The image (base64 encoded) and prompt are both inside request body.
+    """
+    try:
+        print("request => ", request.prompt)
+        response = genai_client.models.generate_content(
+            model="gemini-1.5-pro",
+            contents=[types.Part.from_bytes(data=request.image, mime_type="image/png"), types.Part.from_text(text=request.prompt)],
+            config=types.GenerateContentConfig(
+                temperature=0,
+                system_instruction=SYSTEM_PROMPT_FOR_PLANNER_AGENT,
+                response_mime_type="application/json",
+            )
+        )
+        print("**********************************************")
+        print("response => ", response.text)
+        print("**********************************************")
+        return {
+            "prompt": request.prompt,
+            "generated_text": response.text,
+        }
+    except Exception as e:
+        print("Error generating text: ", str(e))
+        raise HTTPException(status_code=500, detail=f"Error generating text: {str(e)}") from e
