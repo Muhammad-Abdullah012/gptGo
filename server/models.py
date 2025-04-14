@@ -10,6 +10,7 @@ class GenerateRequest(BaseModel):
         alias="previousActions",
         description="List of previous actions taken in this task"
     )
+    current_url: str
 
 
 
