@@ -9,14 +9,14 @@ export const startTask = async () => {
         await focusActiveTab();
         await waitForActiveTabToLoad();
         // Scroll to top to ensure vimium controls are visible
-        await sendMessageToActiveTab({
-            action: BROWSER_ACTIONS.PRESS_KEY,
-            payload: { key: "Escape" },
-        });
-        await sendMessageToActiveTab({
-            action: BROWSER_ACTIONS.PRESS_KEY,
-            payload: { key: "f" },
-        });
+        // await sendMessageToActiveTab({
+        //     action: BROWSER_ACTIONS.PRESS_KEY,
+        //     payload: { key: "Escape" },
+        // });
+        // await sendMessageToActiveTab({
+        //     action: BROWSER_ACTIONS.PRESS_KEY,
+        //     payload: { key: "f" },
+        // });
 
         await delay(1000); // Wait for vimium controls to appear
         const screenshot = await captureScreenshot();
@@ -25,9 +25,9 @@ export const startTask = async () => {
         const MAX_RETRIES = 3;
         let retries = 0;
 
+        const currentUrl = await getCurrentTabUrl();
         const fetchWithRetry = async () => {
             try {
-                const currentUrl = await getCurrentTabUrl();
                 const currentPageHtml = await getCurrentTabHtml();
 
                 console.log("request body  => ", JSON.stringify({
@@ -37,7 +37,7 @@ export const startTask = async () => {
                     current_page_html: currentPageHtml.html,
                     previous_actions: state.previousActions.slice(-3), // Track action history
                 }));
-                
+
 
                 const response = await fetch("http://localhost:8000/generate", {
                     method: "POST",
@@ -65,7 +65,15 @@ export const startTask = async () => {
         };
 
         const data = await fetchWithRetry();
-        const taskCompleted = await performAction(data.generated_text);
+        console.log("response => ", data);
+        if(currentUrl?.includes("instagram")) {
+            sendMessageToActiveTab({
+                action: BROWSER_ACTIONS.RUN_CODE,
+                payload: data,
+            })
+        }
+
+        // const taskCompleted = await performAction(data.generated_text);
 
         // Store action history
         state.previousActions = [
@@ -73,13 +81,15 @@ export const startTask = async () => {
             data.generated_text,
         ].slice(-5); // Keep last 5 actions
 
-        if (!taskCompleted) {
-            await waitForActiveTabToLoad();
-            await delay(1000);
-            await startTask();
-        }
+        // if (!taskCompleted) {
+        //     await waitForActiveTabToLoad();
+        //     await delay(1000);
+        //     await startTask();
+        // }
     } catch (error) {
         console.error("Task failed:", error);
+        if(error instanceof Error)
+            console.error("error stack => ", error.stack)
         // Implement error recovery logic here
     }
 }

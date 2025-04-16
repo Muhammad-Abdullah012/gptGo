@@ -26,7 +26,7 @@ export default defineContentScript({
         const scroll = payload?.generated_text?.scroll;
 
         if (scroll) {
-          simulateKeyPress("d");
+          window.scrollBy(0, 500);
         }
 
         if (jsCode) {
