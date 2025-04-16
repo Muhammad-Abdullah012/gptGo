@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
-from json import loads
 from google.genai import Client, types
+from json import loads
 from os import getenv
 import logging
 
