@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 from google.genai import Client, types
+from json import loads
 from os import getenv
 
 class NavigatorResponse(BaseModel):
@@ -50,4 +51,4 @@ class Navigator:
         print("**********************************************")
         print("Navigator response => ", response.text)
         print("**********************************************")
-        return response.text
+        return loads(response.text)
