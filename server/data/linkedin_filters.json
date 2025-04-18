@@ -1,0 +1,28 @@
+{
+  "Jobs": {
+    "Company": { "label": "Add a company" },
+    "Industry": { "label": "Add an industry" },
+    "Job function": { "label": "Add a job function" }
+  },
+  "Posts": {},
+  "People": {
+    "Location": { "label": "Add a location" },
+    "Current company": { "label": "Add a company" },
+    "Connections of": { "label": "Add a connection" },
+    "Followers of": { "label": "Add a creator" },
+    "Past company": { "label": "Add a company" },
+    "School": { "label": "Add a school" },
+    "Industry": { "label": "Add an industry" },
+    "Service categories": { "label": "Add a service" },
+    "Keywords": {
+      "label": ["First name", "Last name", "Title", "Company", "School"]
+    }
+  },
+  "Groups": {},
+  "Courses": {},
+  "Companies": {},
+  "Schools": {},
+  "Events": {},
+  "Products": {},
+  "Services": {}
+}

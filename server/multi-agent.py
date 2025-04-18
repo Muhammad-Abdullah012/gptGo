@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from models import GenerateRequest
 from agents.navigator import Navigator
 from agents.instagram import InstagramLikePostAgent
+from agents.linkedin import LinkedInAgent
 
 from save_img import save_base64_image, extract_base64_from_data_uri
 from datetime import datetime
@@ -38,16 +39,23 @@ async def generate_text(request: GenerateRequest):
         #     user_query=request.prompt,
         #     current_url=request.current_url,
         # )
-
-        instagram = InstagramLikePostAgent()
-        instagram_response = instagram.perform_action(
-            task=request.prompt, html=request.current_page_html
-        )
+        if "instagram" in request.current_url:
+            instagram = InstagramLikePostAgent()
+            response = instagram.perform_action(
+                task=request.prompt, html=request.current_page_html
+            )
+        elif "linkedin" in request.current_url:
+            linkedin = LinkedInAgent()
+            response = await linkedin.perform_action(
+                task=request.prompt, html=request.current_page_html
+            )
+        else:
+            response = {}
 
         return {
             "prompt": request.prompt,
             # "generated_text": navigation_response,
-            "generated_text": instagram_response,
+            "generated_text": response,
         }
 
     except Exception as e:
