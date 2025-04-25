@@ -95,7 +95,7 @@ export const startTask = async () => {
             } catch (error) {
                 if (retries++ < MAX_RETRIES) {
                     await delay(4000 * retries);
-                    console.log("Retrying fetch...");
+                    console.log("Retrying fetch... due to error => ", error);
                     return fetchWithRetry();
                 }
                 throw error;
@@ -113,17 +113,17 @@ export const startTask = async () => {
         // // const taskCompleted = await performAction(data.generated_text);
         // let taskCompleted = false;
         // // Store action history
-        // state.previousActions = [
-        //     ...(state.previousActions || []),
-        //     data.generated_text,
-        // ].slice(-5); // Keep last 5 actions
-        // console.log("data.done => ", data?.generated_text?.done)
-        // if (!data.done) {
-        //     await waitForActiveTabToLoad();
-        //     await delay(1000);
-        //     await startTask();
+        state.previousActions = [
+            ...(state.previousActions || []),
+            data.generated_text,
+        ].slice(-5); // Keep last 5 actions
+        console.log("data.done => ", data?.generated_text?.done)
+        if (!data?.generated_text?.estimated_completion) {
+            await waitForActiveTabToLoad();
+            await delay(1000);
+            await startTask();
 
-        // }
+        }
     } catch (error) {
         console.error("Task failed:", error);
         if (error instanceof Error)

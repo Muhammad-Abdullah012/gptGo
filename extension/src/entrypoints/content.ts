@@ -22,7 +22,7 @@ export default defineContentScript({
       if (message.action === BROWSER_ACTIONS.RUN_CODE) {
         console.log("running code")
         const payload = message.payload;
-        const jsCode = payload?.generated_text?.javascript_css;
+        const jsCode = payload?.generated_text?.javascript_code;
         const scroll = payload?.generated_text?.scroll;
 
         if (scroll) {

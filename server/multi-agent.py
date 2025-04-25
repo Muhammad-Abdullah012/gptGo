@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from models import GenerateRequest
 from agents.navigator import Navigator
 from agents.instagram import InstagramLikePostAgent
-from agents.linkedin import LinkedInAgent
+from agents.linkedin2 import LinkedInAgent
 
 from save_img import save_base64_image, extract_base64_from_data_uri
 from datetime import datetime
@@ -32,6 +32,10 @@ async def generate_text(request: GenerateRequest):
             request.image,
             f"./images/webpage_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.png",
         )
+        
+        with open(f"./html/linkedin_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.html", "w", encoding="utf-8") as file:
+            file.write(request.current_page_html)
+
 
         # Initialize Navigator and call decide_navigation
         # navigator = Navigator()
@@ -47,7 +51,7 @@ async def generate_text(request: GenerateRequest):
         elif "linkedin" in request.current_url:
             linkedin = LinkedInAgent()
             response = await linkedin.perform_action(
-                task=request.prompt, html=request.current_page_html
+                task=request.prompt, html=request.current_page_html, url=request.current_url, history=request.previous_actions
             )
         else:
             response = {}
