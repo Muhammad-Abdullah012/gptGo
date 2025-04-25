@@ -10,6 +10,8 @@ class GenerateRequest(BaseModel):
         alias="previousActions",
         description="List of previous actions taken in this task"
     )
+    current_url: str = Field(default_factory=str, alias="currentUrl")
+    current_page_html: str = Field(default_factory=str, alias="currentPageHtml")
 
 
 
