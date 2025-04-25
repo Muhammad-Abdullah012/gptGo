@@ -4,7 +4,9 @@ export const BROWSER_ACTIONS = {
   START_TASK: "START_TASK",
   NEXT: "NEXT",
   CONTENT_SCRIPT_READY: "CONTENT_SCRIPT_READY",
-  PING: "PING"
+  PING: "PING",
+  GET_HTML: "GET_HTML",
+  RUN_CODE: "RUN_CODE"
 };
 
 export const KEY_TO_CODE: { [key: string]: string } = {

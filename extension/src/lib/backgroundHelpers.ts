@@ -6,22 +6,32 @@ export const captureScreenshot = async (): Promise<string> => {
     return browser.tabs.captureVisibleTab();
 }
 
+export const getCurrentTab = () => browser.tabs.query({
+    active: true,
+    currentWindow: true,
+});
+
 export const focusActiveTab = async () => {
-    const [tab] = await browser.tabs.query({
-        active: true,
-        currentWindow: true,
-    });
+    const [tab] = await getCurrentTab()
     if (tab.id && tab.windowId) {
         await browser.windows.update(tab.windowId, { focused: true });
         await browser.tabs.update(tab.id, { active: true });
     }
 }
 
+export const getCurrentTabHtml = async () => {
+    const [tab] = await getCurrentTab();
+    if (!tab.id) return null;
+    return browser.tabs.sendMessage(tab.id, { action: BROWSER_ACTIONS.GET_HTML })
+}
+
+export const getCurrentTabUrl = async () => {
+    const [tab] = await getCurrentTab()
+    return tab.url;
+}
+
 export const waitForActiveTabToLoad = async (timeoutMs: number = 10000): Promise<void> => {
-    const [tab] = await browser.tabs.query({
-        active: true,
-        currentWindow: true,
-    });
+    const [tab] = await getCurrentTab()
 
     if (!tab) {
         throw new Error("No active tab found");
@@ -77,10 +87,7 @@ export const waitForActiveTabToLoad = async (timeoutMs: number = 10000): Promise
 }
 
 export const sendMessageToActiveTab = async (payload: object) => {
-    const [tab] = await browser.tabs.query({
-        active: true,
-        currentWindow: true,
-    });
+    const [tab] = await getCurrentTab()
 
     if (!tab?.id) {
         throw new Error('No active tab found');
@@ -105,7 +112,7 @@ export const sendMessageToActiveTab = async (payload: object) => {
 export const performAction = async (action: IAction) => {
     console.log("action => ", JSON.stringify(action));
     if (action.navigate) {
-        await browser.tabs.update({ url: action.navigate });
+        window.location.href = action.navigate;
     }
     if (action.scroll) {
         await sendMessageToActiveTab({
@@ -119,6 +126,22 @@ export const performAction = async (action: IAction) => {
                 payload: { key: "j" },
             });
             await delay(50);
+        }
+    }
+    if (action.key) {
+        console.log("key to code => ", KEY_TO_CODE[action.key]);
+        if (KEY_TO_CODE[action.key]) {
+            await sendMessageToActiveTab({
+                action: BROWSER_ACTIONS.PRESS_KEY,
+                payload: { key: KEY_TO_CODE[action.key] },
+            });
+        } else {
+            for (const key of action.key.split("")) {
+                await sendMessageToActiveTab({
+                    action: BROWSER_ACTIONS.PRESS_KEY,
+                    payload: { key },
+                });
+            }
         }
     }
     if (action.click) {

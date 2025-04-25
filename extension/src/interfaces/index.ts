@@ -5,4 +5,5 @@ export interface IAction {
   done?: boolean | null;
   scroll: boolean;
   target_visible: boolean;
+  key?: string;
 }
