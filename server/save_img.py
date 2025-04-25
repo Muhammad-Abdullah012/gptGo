@@ -1,6 +1,23 @@
 import base64
 
 
+def extract_base64_from_data_uri(data_uri: str) -> str:
+    """
+    Extracts the base64-encoded content from a data URI.
+    Args:
+        data_uri (str): A string expected to be in the format 'data:[<mediatype>][;base64],<data>'.
+    Returns:
+        str: The base64-encoded data portion of the URI. If no comma is present,
+             returns the input as-is.
+    """
+    if not isinstance(data_uri, str):
+        raise TypeError("Expected a string as data_uri")
+
+    if "," not in data_uri:
+        return data_uri
+
+    return data_uri.split(",", 1)[1]
+
 def save_base64_image(base64_string: str, output_file_path: str):
     """
     Saves a base64-encoded image to a file.
@@ -10,11 +27,8 @@ def save_base64_image(base64_string: str, output_file_path: str):
     """
     try:
         # Split the base64 string to remove the header (e.g., "data:image/jpeg;base64,")
-        if "," in base64_string:
-            header, base64_data = base64_string.split(",", 1)
-        else:
-            base64_data = base64_string  # Assume it's already just the base64 data
-
+        # Assume it's already just the base64 data
+        base64_data = extract_base64_from_data_uri(base64_string)
         # Decode the base64 string into binary data
         image_data = base64.b64decode(base64_data)
 
