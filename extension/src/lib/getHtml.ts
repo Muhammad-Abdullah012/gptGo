@@ -33,6 +33,7 @@ export const getVisibleClickableHTML = (): string => {
     const clickableSelectors = [
         'a[href]',
         'button',
+        'input',
         'input[type="button"]',
         'input[type="submit"]',
         'div[role="button"]',
@@ -60,8 +61,18 @@ export const getVisibleClickableHTML = (): string => {
 
     const visibleElements = elements.filter(isVisible);
 
+    const isVisibleOrPartiallyVisible = (el: HTMLElement): boolean => {
+        const style = window.getComputedStyle(el);
+        return style.visibility !== 'hidden' && style.display !== 'none';
+    };
+
+    const dialogs = Array.from(document.querySelectorAll<HTMLElement>('[role="dialog"]'))
+        .filter(isVisibleOrPartiallyVisible);
+
     const wrapper = document.createElement('div');
     visibleElements.forEach(el => wrapper.appendChild(el.cloneNode(true)));
+
+    dialogs.forEach(dialog => wrapper.appendChild(dialog.cloneNode(true)));
 
     return wrapper.innerHTML;
 };
